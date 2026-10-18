@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}教室一览 - 巡课系统{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>教室一览（共 {{ rooms|length }} 间）</h2>
+  <p style="font-size:13px;color:#8b95a3;margin-bottom:12px;">
+    每个教室对应的班级。点房间号可直接发起该教室的巡课。
+  </p>
+
+  {% if rooms %}
+  <div class="tbl-scroll">
+    <table>
+      <thead>
+        <tr><th>房间号</th><th>班级代码</th><th>班级名称</th><th>操作</th></tr>
+      </thead>
+      <tbody>
+        {% for r in rooms %}
+        <tr>
+          <td class="nowrap"><strong>{{ r['room_no'] }}</strong></td>
+          <td class="nowrap">{{ r['class_code'] }}</td>
+          <td>{{ r['class_full'] or '—' }}</td>
+          <td class="nowrap">
+            <a class="btn btn-sm" href="{{ url_for('home', room=r['room_no']) }}">去巡课</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty">没有教室数据，请先运行 <code>python import_data.py</code></div>
+  {% endif %}
+</div>
+{% endblock %}

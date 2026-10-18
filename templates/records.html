@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}巡课记录 - 巡课系统{% endblock %}
+
+{% block content %}
+
+{# ---------- 总览数字 ---------- #}
+<div class="stats">
+  <div class="s"><div class="n">{{ stats.total }}</div><div class="l">巡课总条数</div></div>
+  <div class="s"><div class="n">{{ stats.rooms }}</div><div class="l">覆盖教室数</div></div>
+  <div class="s"><div class="n">{{ stats.authors }}</div><div class="l">填表人数</div></div>
+</div>
+
+{# ---------- 筛选 ---------- #}
+<div class="card">
+  <h2>巡课记录</h2>
+  <form method="get" class="filter">
+    <div class="field">
+      <label>房间号</label>
+      <input type="text" name="room" value="{{ f_room }}" placeholder="如 1-101">
+    </div>
+    <div class="field">
+      <label>日期</label>
+      <input type="date" name="date" value="{{ f_date }}">
+    </div>
+    <div class="field">
+      <label>填表人</label>
+      <input type="text" name="author" value="{{ f_author }}" placeholder="姓名关键字">
+    </div>
+    <button type="submit" class="btn">筛选</button>
+    {% if f_room or f_date or f_author %}
+      <a href="{{ url_for('records') }}" class="btn btn-gray">清除</a>
+    {% endif %}
+  </form>
+</div>
+
+{# ---------- 列表 ---------- #}
+<div class="card">
+  {% if records %}
+  <div class="tbl-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>时间</th>
+          <th>房间</th>
+          <th>班级</th>
+          <th>节次</th>
+          <th>课程</th>
+          <th>教师</th>
+          <th>填表人</th>
+          <th>照片</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td class="nowrap">{{ r['patrol_date'] }}</td>
+          <td class="nowrap">{{ r['created_at'][11:16] if r['created_at'] else '' }}</td>
+          <td class="nowrap">{{ r['room_no'] }}</td>
+          <td class="nowrap">{{ r['class_name'] or '—' }}</td>
+          <td class="nowrap">{{ '第' + r['section'] + '节' if r['section'] else '—' }}</td>
+          <td class="nowrap">{{ r['course'] or '—' }}</td>
+          <td class="nowrap">{{ r['teacher'] or '—' }}</td>
+          <td class="nowrap">{{ r['author'] or '—' }}</td>
+          <td class="nowrap">
+            {% if r['image_path'] %}
+              <a href="{{ url_for('uploaded', name=r['image_path']) }}" target="_blank">📷</a>
+            {% else %}—{% endif %}
+          </td>
+          <td class="nowrap">
+            <a class="btn btn-sm" href="{{ url_for('record_detail', rid=r['id']) }}">详情</a>
+            <form method="post" action="{{ url_for('record_delete', rid=r['id']) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('确定删除这条记录吗？');">
+              <button type="submit" class="btn btn-red btn-sm">删</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty">
+      还没有巡课记录<br>
+      <a href="{{ url_for('home') }}" class="btn" style="margin-top:12px;">去巡课</a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

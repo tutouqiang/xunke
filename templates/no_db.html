@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}需要初始化数据 - 巡课系统{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align:center;padding:40px 20px;">
+  <div style="font-size:44px;">🗄️</div>
+  <h2 style="margin-top:14px;">数据库还没建</h2>
+  <p style="color:#7a8699;margin-top:8px;">
+    需要先把 Excel 里的教室、节次、课程表导入数据库。
+  </p>
+  <div style="background:#f7f9fc;border-radius:7px;padding:16px;margin-top:18px;
+              text-align:left;font-family:Consolas,Monaco,monospace;font-size:14px;">
+    cd E:\projects\xunke<br>
+    python import_data.py
+  </div>
+  <p style="color:#98a1ad;font-size:13px;margin-top:14px;">
+    导入完成后刷新本页即可。
+  </p>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}巡课详情 - 巡课系统{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>巡课详情 #{{ r['id'] }}</h2>
+  <dl class="info-grid">
+    <dt>房间号</dt><dd class="big">{{ r['room_no'] }}</dd>
+    <dt>班级</dt><dd>{{ r['class_name'] or '—' }}</dd>
+    <dt>日期</dt><dd>{{ r['patrol_date'] }}</dd>
+    <dt>节次</dt><dd>{{ '第' + r['section'] + '节' if r['section'] else '—' }}</dd>
+    <dt>课程</dt><dd>{{ r['course'] or '—' }}</dd>
+    <dt>任课教师</dt><dd>{{ r['teacher'] or '—' }}</dd>
+    <dt>填表人</dt><dd>{{ r['author'] or '—' }}</dd>
+    <dt>提交时间</dt><dd>{{ r['created_at'] }}</dd>
+  </dl>
+
+  <div style="margin-top:16px;">
+    <h3>课堂情况</h3>
+    <div style="background:#f7f9fc;padding:12px;border-radius:7px;
+                white-space:pre-wrap;font-size:14px;">{{ r['situation'] or '（未填写）' }}</div>
+  </div>
+
+  {% if r['image_path'] %}
+  <div style="margin-top:16px;">
+    <h3>现场照片</h3>
+    <img class="detail-img" src="{{ url_for('uploaded', name=r['image_path']) }}" alt="现场照片">
+  </div>
+  {% else %}
+  <div style="margin-top:16px;">
+    <h3>现场照片</h3>
+    <div style="font-size:14px;color:#98a1ad;">本次未拍照</div>
+  </div>
+  {% endif %}
+
+  <div class="btn-row" style="margin-top:20px;">
+    <a href="{{ url_for('records') }}" class="btn btn-gray">返回列表</a>
+    <form method="post" action="{{ url_for('record_delete', rid=r['id']) }}"
+          onsubmit="return confirm('确定删除这条记录吗？');">
+      <button type="submit" class="btn btn-red">删除记录</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,145 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  background: #eef1f5;
+  color: #2c3e50;
+  line-height: 1.6;
+  padding-bottom: 50px;
+}
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  background: #1f6feb;
+  color: #fff;
+  height: 54px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+.topbar .brand { font-size: 17px; font-weight: bold; }
+.topbar nav a {
+  color: #d8e6ff; text-decoration: none; margin-left: 16px; font-size: 14px;
+  padding: 6px 10px; border-radius: 5px;
+}
+.topbar nav a:hover { color: #fff; background: rgba(255,255,255,.15); }
+
+/* ---------- 容器 ---------- */
+.wrap { max-width: 760px; margin: 18px auto; padding: 0 14px; }
+
+.card {
+  background: #fff; border-radius: 10px; padding: 18px;
+  margin-bottom: 16px; box-shadow: 0 1px 5px rgba(0,0,0,.07);
+}
+h2 { font-size: 18px; margin-bottom: 14px; }
+h3 { font-size: 15px; margin-bottom: 10px; color: #555; }
+
+/* ---------- 提示 ---------- */
+.flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+.flash.success { background: #d7f5e0; color: #16663a; }
+.flash.error   { background: #fde2e2; color: #8f1d1d; }
+.flash.warning { background: #fff4d6; color: #7a5b00; }
+
+/* ---------- 信息展示块 ---------- */
+.info-grid { display: grid; grid-template-columns: 92px 1fr; gap: 8px 12px; }
+.info-grid dt { color: #7a8699; font-size: 14px; }
+.info-grid dd { font-size: 14px; font-weight: 600; word-break: break-all; }
+.info-grid dd.big { font-size: 17px; color: #1f6feb; }
+
+.note { font-size: 13px; color: #a06a00; background: #fff8e5;
+        border-left: 3px solid #f0b429; padding: 7px 10px; border-radius: 4px;
+        margin-top: 8px; }
+
+/* ---------- 表单 ---------- */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 14px; color: #55606f; margin-bottom: 5px; }
+.field label .req { color: #e5484d; }
+.field input[type=text], .field input[type=date], .field select, .field textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #d5dae1;
+  border-radius: 7px; font-size: 15px; font-family: inherit; background: #fff;
+}
+.field textarea { min-height: 88px; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: #1f6feb; box-shadow: 0 0 0 3px rgba(31,111,235,.12);
+}
+.field input[readonly] { background: #f4f6f9; color: #55606f; }
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: inline-block; padding: 9px 18px; border: none; border-radius: 7px;
+  font-size: 15px; cursor: pointer; text-decoration: none; text-align: center;
+  background: #1f6feb; color: #fff; font-family: inherit;
+}
+.btn:hover { background: #1a5ecc; }
+.btn-block { width: 100%; padding: 13px; font-size: 16px; }
+.btn-gray { background: #8b95a3; }
+.btn-gray:hover { background: #77808c; }
+.btn-red { background: #e5484d; }
+.btn-red:hover { background: #cc3b40; }
+.btn-sm { padding: 5px 11px; font-size: 13px; border-radius: 5px; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- 照片区 ---------- */
+.photo-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+#thumb-box { text-align: center; }
+#thumb { max-width: 160px; max-height: 160px; border-radius: 8px;
+         border: 1px solid #e1e5ea; display: none; }
+#thumb-hint { font-size: 13px; color: #98a1ad; }
+
+/* 摄像头全屏层 */
+#cam-layer {
+  display: none; position: fixed; inset: 0; background: #000;
+  z-index: 200; flex-direction: column;
+}
+#cam-layer.on { display: flex; }
+#video { flex: 1; width: 100%; object-fit: cover; }
+#cam-bar {
+  background: #111; padding: 14px; display: flex; gap: 10px;
+  justify-content: center; flex-wrap: wrap;
+}
+#cam-bar button { margin: 0; }
+#cam-preview {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; display: none;
+}
+
+/* ---------- 表格 ---------- */
+.tbl-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 9px 8px; text-align: left; border-bottom: 1px solid #eef1f5; }
+th { color: #7a8699; font-weight: normal; font-size: 13px; white-space: nowrap; }
+tbody tr:hover { background: #f8fafc; }
+td.nowrap { white-space: nowrap; }
+
+/* ---------- 概览数字 ---------- */
+.stats { display: flex; gap: 12px; margin-bottom: 16px; }
+.stats .s {
+  flex: 1; background: #fff; border-radius: 10px; padding: 14px;
+  text-align: center; box-shadow: 0 1px 5px rgba(0,0,0,.07);
+}
+.stats .s .n { font-size: 22px; font-weight: bold; color: #1f6feb; }
+.stats .s .l { font-size: 12px; color: #8b95a3; margin-top: 2px; }
+
+/* ---------- 空状态 ---------- */
+.empty { text-align: center; color: #a3acb8; padding: 36px 0; font-size: 14px; }
+
+/* ---------- 筛选栏 ---------- */
+.filter { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end;
+          margin-bottom: 14px; }
+.filter .field { margin-bottom: 0; }
+.filter input, .filter select { padding: 7px 10px; font-size: 14px; }
+
+.foot { text-align: center; font-size: 12px; color: #a3acb8; padding: 16px 0; }
+
+/* 照片在详情页 */
+.detail-img { max-width: 100%; border-radius: 8px; margin-top: 8px;
+              border: 1px solid #e1e5ea; }
+
+@media (max-width: 520px) {
+  .info-grid { grid-template-columns: 80px 1fr; }
+  .topbar { padding: 0 12px; }
+  .topbar nav a { margin-left: 6px; padding: 6px 7px; font-size: 13px; }
+}

@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block title %}巡课 - 巡课系统{% endblock %}
+
+{% block content %}
+
+{# ---------- 扫码/输入房间号 ---------- #}
+<div class="card">
+  <h2>开始巡课</h2>
+  <form method="get" class="filter">
+    <div class="field" style="flex:1;min-width:130px;">
+      <label>房间号</label>
+      <input type="text" name="room" value="{{ room_no }}" placeholder="如 1-101" required>
+    </div>
+    <div class="field">
+      <label>日期</label>
+      <input type="date" name="date" value="{{ patrol_date }}">
+    </div>
+    <button type="submit" class="btn">查询</button>
+  </form>
+  <p style="font-size:13px;color:#8b95a3;margin-top:8px;">
+    💡 教室门口贴的二维码扫开就是本页并自动带出房间号，无需手动输入。
+  </p>
+</div>
+
+{% if error %}
+  <div class="flash error">{{ error }}</div>
+{% endif %}
+
+{% if room_no and not error %}
+  {# ---------- 自动带出的课程信息 ---------- #}
+  <div class="card">
+    <h2>本次巡课信息</h2>
+    <dl class="info-grid">
+      <dt>房间号</dt><dd class="big">{{ room_no }}</dd>
+      <dt>班级</dt><dd class="big">{{ class_full or '—' }}</dd>
+      <dt>日期</dt><dd>{{ patrol_date }}（{{ weekday }}）</dd>
+      <dt>节次</dt><dd>{{ '第' + section + '节' if section else '—' }}</dd>
+      <dt>课程</dt><dd>{{ course or '—' }}</dd>
+      <dt>任课教师</dt><dd>{{ teacher or '—' }}</dd>
+    </dl>
+
+    {% for n in notes %}
+      <div class="note">⚠️ {{ n }}</div>
+    {% endfor %}
+  </div>
+
+  {# ---------- 填写表单 ---------- #}
+  <div class="card">
+    <h2>填写巡课情况</h2>
+
+    <div class="field">
+      <label>节次 <span class="req">*</span></label>
+      <select id="Sections">
+        {% for s in sections %}
+          <option value="{{ s.name }}"
+            {{ 'selected' if s.name == section else '' }}>
+            第{{ s.name }}节
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label>课程</label>
+      <input type="text" id="Course" value="{{ course }}">
+    </div>
+
+    <div class="field">
+      <label>任课教师</label>
+      <input type="text" id="ClassTeacher" value="{{ teacher }}">
+    </div>
+
+    <div class="field">
+      <label>课堂情况 <span class="req">*</span></label>
+      <textarea id="ClassroomSituation"
+        placeholder="例如：学生到课率良好，课堂纪律正常，教师授课认真"></textarea>
+    </div>
+
+    <div class="field">
+      <label>填表人 <span class="req">*</span></label>
+      <input type="text" id="Author" placeholder="请填写你的姓名">
+    </div>
+
+    {# ---------- 拍照 ---------- #}
+    <div class="field">
+      <div class="photo-head">
+        <label style="margin:0;">现场照片</label>
+        <button type="button" class="btn btn-sm" id="open-cam">📷 打开摄像头</button>
+      </div>
+      <div id="thumb-box">
+        <img id="thumb" alt="现场照片">
+        <div id="thumb-hint">未拍照（可不拍）</div>
+        <button type="button" class="btn btn-gray btn-sm" id="clear-photo"
+                style="display:none;margin-top:8px;">清除照片</button>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-block" id="submit-btn">提交巡课记录</button>
+  </div>
+
+  {# ---------- 摄像头全屏层 ---------- #}
+  <div id="cam-layer">
+    <video id="video" autoplay playsinline></video>
+    <img id="cam-preview" alt="预览">
+    <div id="cam-bar">
+      <button type="button" class="btn" id="btn-shoot">拍照</button>
+      <button type="button" class="btn btn-gray" id="btn-retake" style="display:none;">重拍</button>
+      <button type="button" class="btn" id="btn-confirm" style="display:none;">完成</button>
+      <button type="button" class="btn btn-red" id="btn-exit">退出</button>
+    </div>
+  </div>
+
+  {# 隐藏字段：把后端带出来的信息交给 JS #}
+  <input type="hidden" id="RoomNum" value="{{ room_no }}">
+  <input type="hidden" id="ClassName" value="{{ class_full }}">
+  <input type="hidden" id="Date" value="{{ patrol_date }}">
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if room_no and not error %}
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  let stream = null;
+  let photoData = null;   // 现在的照片（base64），没拍就是 null
+
+  /* ================= 摄像头 ================= */
+  const layer = $("cam-layer"), video = $("video"), preview = $("cam-preview");
+
+  async function openCam() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }     // 优先用后置摄像头
+      });
+      video.srcObject = stream;
+      layer.classList.add("on");
+      preview.style.display = "none";
+      video.style.display = "block";
+      $("btn-shoot").style.display = "inline-block";
+      $("btn-retake").style.display = "none";
+      $("btn-confirm").style.display = "none";
+    } catch (e) {
+      alert("打不开摄像头：" + e.message + "\n（用电脑测试时可能没有摄像头，可跳过拍照）");
+    }
+  }
+
+  function stopCam() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  }
+
+  function shoot() {
+    // 把当前画面画到 canvas 上，取出 base64
+    const cv = document.createElement("canvas");
+    cv.width = video.videoWidth;
+    cv.height = video.videoHeight;
+    cv.getContext("2d").drawImage(video, 0, 0);
+    photoData = cv.toDataURL("image/png");
+
+    // 定格预览
+    preview.src = photoData;
+    preview.style.display = "block";
+    video.style.display = "none";
+    stopCam();
+
+    $("btn-shoot").style.display = "none";
+    $("btn-retake").style.display = "inline-block";
+    $("btn-confirm").style.display = "inline-block";
+  }
+
+  function retake() { openCam(); }
+
+  function confirmPhoto() {
+    // 关掉摄像头层，把缩略图显示在表单里
+    stopCam();
+    layer.classList.remove("on");
+    $("thumb").src = photoData;
+    $("thumb").style.display = "block";
+    $("thumb-hint").textContent = "已拍照";
+    $("clear-photo").style.display = "inline-block";
+  }
+
+  function clearPhoto() {
+    photoData = null;
+    $("thumb").src = "";
+    $("thumb").style.display = "none";
+    $("thumb-hint").textContent = "未拍照（可不拍）";
+    $("clear-photo").style.display = "none";
+  }
+
+  $("open-cam").addEventListener("click", openCam);
+  $("btn-shoot").addEventListener("click", shoot);
+  $("btn-retake").addEventListener("click", retake);
+  $("btn-confirm").addEventListener("click", confirmPhoto);
+  $("btn-exit").addEventListener("click", () => { stopCam(); layer.classList.remove("on"); });
+  $("clear-photo").addEventListener("click", clearPhoto);
+
+  /* ================= 提交 ================= */
+  $("submit-btn").addEventListener("click", async function () {
+    const situation = $("ClassroomSituation").value.trim();
+    const author = $("Author").value.trim();
+
+    if (!situation) { alert("请填写课堂情况"); return; }
+    if (!author)    { alert("请填写填表人"); return; }
+
+    const payload = {
+      RoomNum:            $("RoomNum").value,
+      ClassName:          $("ClassName").value,
+      Date:               $("Date").value,
+      Sections:           $("Sections").value,
+      Course:             $("Course").value,
+      ClassTeacher:       $("ClassTeacher").value,
+      ClassroomSituation: situation,
+      Author:             author,
+      Img:                photoData            // 没拍就是 null
+    };
+
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = "提交中…";
+
+    try {
+      const resp = await fetch("/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await resp.json();
+
+      if (result.success) {
+        if (confirm("提交成功！\n是否现在查看巡课记录？")) {
+          window.location.href = "/records";
+        } else {
+          window.location.href = "/";     // 回到首页准备下一次巡课
+        }
+      } else {
+        alert("提交失败：" + (result.error || "未知错误"));
+        btn.disabled = false;
+        btn.textContent = "提交巡课记录";
+      }
+    } catch (e) {
+      alert("网络错误：" + e.message);
+      btn.disabled = false;
+      btn.textContent = "提交巡课记录";
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}
