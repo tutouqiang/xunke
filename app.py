@@ -69,6 +69,9 @@ def home():
         "notes": [],
         "sections": core.all_sections(db),
         "error": None,
+        # 基础数据（教室/节次）为空时，首页给个提示，
+        # 否则节次下拉框空空如也，用户会以为是坏了
+        "data_empty": core.base_data_empty(db),
     }
 
     if room_no:

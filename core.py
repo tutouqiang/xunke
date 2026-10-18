@@ -160,6 +160,16 @@ def resolve(db, room_no, on_date=None, section_name=None):
         "notes": [],
     }
 
+    # --- 日期 / 星期 ---
+    # 先算这个：它和房间号对不对无关，早点算出来，
+    # 即使房间号查不到，返回的信息也更完整。
+    if on_date:
+        d = date.fromisoformat(on_date) if isinstance(on_date, str) else on_date
+    else:
+        d = date.today()
+    result["date"] = d.isoformat()
+    result["weekday"] = weekday_of(d)
+
     # --- 房间号 → 班级 ---
     room = room_to_class(db, room_no)
     if room is None:
@@ -172,14 +182,6 @@ def resolve(db, room_no, on_date=None, section_name=None):
         (room["class_code"],),
     ).fetchone()
     result["class_full"] = sched["f"] if sched and sched["f"] else room["class_code"]
-
-    # --- 日期 / 星期 ---
-    if on_date:
-        d = date.fromisoformat(on_date) if isinstance(on_date, str) else on_date
-    else:
-        d = date.today()
-    result["date"] = d.isoformat()
-    result["weekday"] = weekday_of(d)
 
     # --- 节次 ---
     if section_name:
@@ -255,6 +257,16 @@ def query_records(db, room_no=None, on_date=None, author=None, limit=200):
     sql += " ORDER BY patrol_date DESC, id DESC LIMIT ?"
     params.append(limit)
     return db.execute(sql, params).fetchall()
+
+
+def base_data_empty(db):
+    """基础数据（教室对应表 / 节次表）是不是空的。
+
+    空壳状态下用来在页面上给出提示。
+    """
+    n_rooms = db.execute("SELECT COUNT(*) FROM rooms").fetchone()[0]
+    n_secs = db.execute("SELECT COUNT(*) FROM sections").fetchone()[0]
+    return n_rooms == 0 or n_secs == 0
 
 
 def record_stats(db):
