@@ -17,6 +17,8 @@ import shutil
 import sys
 import tempfile
 
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 os.environ["SECRET_KEY"] = "test-key"
 
 import db as db_module
@@ -120,8 +122,9 @@ with app.app_context():
           core.room_to_class(db, "9-999") is None)
     check("空房间号返回 None", core.room_to_class(db, "") is None)
     if HAS_DATA:
-        r = core.room_to_class(db, "1-101")
-        check("1-101 能查到班级", r is not None, str(r))
+        sample_room = db.execute("SELECT room_no FROM rooms ORDER BY room_no LIMIT 1").fetchone()["room_no"]
+        r = core.room_to_class(db, sample_room)
+        check(f"{sample_room} 能查到班级", r is not None, str(r))
     else:
         skip("1-101 能查到班级", "空壳无数据")
 
@@ -239,7 +242,13 @@ else:
 
 r = client.get("/records")
 check("记录页能打开", r.status_code == 200)
-check("空时显示空状态", "还没有巡课记录" in r.get_data(as_text=True))
+with app.app_context():
+    _n_recs = get_db().execute("SELECT COUNT(*) FROM records").fetchone()[0]
+if _n_recs == 0:
+    check("空时显示空状态", "还没有巡课记录" in r.get_data(as_text=True))
+else:
+    check("有记录时列表正常显示记录（不误报空状态）",
+          "还没有巡课记录" not in r.get_data(as_text=True))
 
 r = client.get("/api/resolve?room=9-999")
 check("API 正常返回 JSON", r.status_code == 200 and r.get_json()["ok"] is False)
